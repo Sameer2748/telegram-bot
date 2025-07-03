@@ -173,7 +173,7 @@ bot.on('text', async (ctx) => {
           ctx.reply(`✅ Thanks! You're now verified.
 
 Please follow the rules of the community:  
-🚫 No spam or self-promo  
+🚫 No spam or self-promotion  
 ✅ Be kind, respectful, and helpful
 
 📵 *Optional:* If you wish to hide your contact number from other members, follow:  
@@ -206,7 +206,7 @@ Please follow the rules of the community:
             ctx.reply(`✅ Thanks! You're now verified.
 
 Please follow the rules of the community:  
-🚫 No spam or self-promo  
+🚫 No spam or self-promotion  
 ✅ Be kind, respectful, and helpful
 
 📵 *Optional:* If you wish to hide your contact number from other members, follow:  
