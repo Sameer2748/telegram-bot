@@ -23,6 +23,8 @@ function getAuthWithFallback() {
   throw new Error('❌ No valid credential files found');
 }
 
+
+
 const auth = getAuthWithFallback();
 const sheets = google.sheets({ version: 'v4', auth });
 
@@ -254,9 +256,22 @@ Please follow the rules of the community:
 });
 
 // DELETE JOIN/LEAVE MESSAGES
+
+// DELETE JOIN/LEAVE MESSAGES
 bot.on('message', async (ctx) => {
   const msg = ctx.message;
+
+  // Log for debugging
+  console.log('Received message:', {
+    message_id: msg.message_id,
+    message_thread_id: msg.message_thread_id,
+    new_chat_members: msg.new_chat_members,
+    left_chat_member: msg.left_chat_member,
+    text: msg.text,
+  });
+
   if (msg.new_chat_members || msg.left_chat_member) {
+    console.log(`Deleting join/leave message:`, msg.message_id);
     try {
       await ctx.deleteMessage(msg.message_id);
     } catch (err) {
@@ -264,35 +279,6 @@ bot.on('message', async (ctx) => {
     }
   }
 });
-
-// DM USER WHEN THEY JOIN GROUP
-bot.on('chat_member', async (ctx) => {
-  try {
-    const member = ctx.update.chat_member;
-    const status = member.new_chat_member.status;
-
-    if (status === 'member') {
-      const userId = member.new_chat_member.user.id;
-
-      await ctx.telegram.sendMessage(
-        userId,
-        `🎉 *You just stepped into a signal-only zone for serious creators.*
-
-🎯 Gigs. 🎬 Collabs. 🎤 Real Work.
-
-💡 *Liked our mission?*  
-Please add 3 creators who belong here 👥  
-Forward them this invite — https://indiekaum.short.gy/GHxSQq
-
-Let’s grow this tribe, one authentic creator at a time.`,
-        { parse_mode: 'Markdown' }
-      );
-    }
-  } catch (err) {
-    console.error('Private message error:', err);
-  }
-});
-
 
 bot.launch();
 console.log('🤖 Bot is running...');
