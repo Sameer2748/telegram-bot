@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const fs = require('fs');
 const { Telegraf } = require('telegraf');
@@ -67,7 +66,8 @@ Let’s keep IndieKaum real.
     reply_markup: {
       keyboard: [['Next']],
       resize_keyboard: true,
-      one_time_keyboard: true
+      one_time_keyboard: true,
+      input_field_placeholder: 'Tap Next to continue'
     }
   });
 });
@@ -86,7 +86,8 @@ bot.command('restart', async (ctx) => {
     reply_markup: {
       keyboard: [['Next']],
       resize_keyboard: true,
-      one_time_keyboard: true
+      one_time_keyboard: true,
+      input_field_placeholder: 'Tap Next to continue'
     }
   });
 });
@@ -97,10 +98,11 @@ bot.hears('Next', (ctx) => {
 
   if (state.step === 'welcome') {
     state.step = 'name';
-    ctx.reply('📝 Your Full Name:');
+    ctx.reply('📝 Your Full Name:', {
+      reply_markup: { remove_keyboard: true }
+    });
   } else if (state.step === 'invite_message') {
     state.step = 'show_join';
-    state.showJoin = true;
     showJoinMessage(ctx);
   }
 
@@ -140,6 +142,11 @@ bot.on('text', async (ctx) => {
   if (ctx.chat.type !== 'private') return;
   const state = userStates[ctx.chat.id];
   if (!state) return ctx.reply('Please type /start to begin.');
+
+  // Block input typing in button-only steps
+  if (state.step === 'welcome' || state.step === 'invite_message' || state.step === 'show_join') {
+    return;
+  }
 
   const input = ctx.message.text.trim();
 
@@ -197,11 +204,14 @@ bot.on('text', async (ctx) => {
 🎯 Gigs. 🎬 Collabs. 🎤 Real Work.
 
 Let’s grow this tribe, one authentic creator at a time.  
-Thank You! Welcome to the community!`, {
+
+*Press ‘NEXT’ button to proceed!*`, {
+          parse_mode: 'Markdown',
           reply_markup: {
             keyboard: [['Next']],
             resize_keyboard: true,
-            one_time_keyboard: true
+            one_time_keyboard: true,
+            input_field_placeholder: 'Tap Next to continue'
           }
         });
 
