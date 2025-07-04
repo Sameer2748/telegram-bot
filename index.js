@@ -196,10 +196,6 @@ bot.on('text', async (ctx) => {
         ctx.reply(`You just stepped into a signal-only zone for serious creators.
 🎯 Gigs. 🎬 Collabs. 🎤 Real Work.
 
-💡 Liked our mission?  
-Please add 3 creators who belong here 👥  
-Forward them this invite — https://indiekaum.short.gy/GHxSQq
-
 Let’s grow this tribe, one authentic creator at a time.  
 Thank You! Welcome to the community!`, {
           reply_markup: {
