@@ -5,12 +5,27 @@ const { google } = require('googleapis');
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-// Google Sheets setup
-const auth = new google.auth.GoogleAuth({
-  keyFile: 'credentials.json',
-  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-});
+function getAuthWithFallback() {
+  const keyFiles = ['cred-1.json', 'cred-2.json'];
+  for (const file of keyFiles) {
+    try {
+      if (fs.existsSync(file)) {
+        console.log(`✅ Using credentials from: ${file}`);
+        return new google.auth.GoogleAuth({
+          keyFile: file,
+          scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+        });
+      }
+    } catch (err) {
+      console.error(`Error checking ${file}:`, err);
+    }
+  }
+  throw new Error('❌ No valid credential files found');
+}
+
+const auth = getAuthWithFallback();
 const sheets = google.sheets({ version: 'v4', auth });
+
 
 const userStates = {};
 

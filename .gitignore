@@ -19,3 +19,5 @@ Thumbs.db
 
 # Optional: Ignore credentials
 credentials.json
+cred-1.json
+cred-2.json
