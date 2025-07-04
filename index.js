@@ -253,5 +253,32 @@ Please follow the rules of the community:
   userStates[ctx.chat.id] = state;
 });
 
+bot.on('chat_member', async (ctx) => {
+  try {
+    const member = ctx.update.chat_member;
+    const status = member.new_chat_member.status;
+
+    if (status === 'member') {
+      const userId = member.from.id;
+      await ctx.telegram.sendMessage(
+        userId,
+        `🎉 *You just stepped into a signal-only zone for serious creators.*
+
+🎯 Gigs. 🎬 Collabs. 🎤 Real Work.
+
+💡 *Liked our mission?*  
+Please add 3 creators who belong here 👥  
+Forward them this invite — https://indiekaum.short.gy/GHxSQq
+
+Let’s grow this tribe, one authentic creator at a time.`,
+        { parse_mode: 'Markdown' }
+      );
+    }
+  } catch (err) {
+    console.error('Private message error:', err);
+  }
+});
+
+
 bot.launch();
 console.log('🤖 Bot is running...');
