@@ -253,13 +253,27 @@ Please follow the rules of the community:
   userStates[ctx.chat.id] = state;
 });
 
+// DELETE JOIN/LEAVE MESSAGES
+bot.on('message', async (ctx) => {
+  const msg = ctx.message;
+  if (msg.new_chat_members || msg.left_chat_member) {
+    try {
+      await ctx.deleteMessage(msg.message_id);
+    } catch (err) {
+      console.error('❌ Could not delete join/leave message:', err);
+    }
+  }
+});
+
+// DM USER WHEN THEY JOIN GROUP
 bot.on('chat_member', async (ctx) => {
   try {
     const member = ctx.update.chat_member;
     const status = member.new_chat_member.status;
 
     if (status === 'member') {
-      const userId = member.from.id;
+      const userId = member.new_chat_member.user.id;
+
       await ctx.telegram.sendMessage(
         userId,
         `🎉 *You just stepped into a signal-only zone for serious creators.*
