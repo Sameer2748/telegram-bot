@@ -48,7 +48,7 @@ bot.start(async (ctx) => {
 
   userStates[ctx.chat.id] = { step: 'welcome' };
 
-  // First message
+  // First welcome message
   ctx.reply(`🎙️ Welcome to IndieKaum –
 
 Before we unlock full access, we need to know who’s in the room.
@@ -59,9 +59,9 @@ To keep this space authentic, trusted, and spam-free.
 🛡️ Your data stays safe, encrypted, and never shared.
 
 📥 Fill your quick intro here  
-It takes 45 seconds.  Let’s keep IndieKaum real.`);
+It takes 45 seconds. Let’s keep IndieKaum real.`);
 
-  // Delay 5 seconds and send first input
+  // After 5 sec, ask full name
   setTimeout(() => {
     userStates[ctx.chat.id].step = 'name';
     ctx.reply('📝 Your Full Name:', {
@@ -91,18 +91,6 @@ bot.command('restart', async (ctx) => {
   }, 5000);
 });
 
-bot.hears('Next', (ctx) => {
-  if (ctx.chat.type !== 'private') return;
-  const state = userStates[ctx.chat.id] || {};
-
-  if (state.step === 'invite_message') {
-    state.step = 'show_join';
-    showJoinMessage(ctx);
-  }
-
-  userStates[ctx.chat.id] = state;
-});
-
 async function showJoinMessage(ctx) {
   try {
     const groupId = process.env.GROUP_ID;
@@ -128,13 +116,12 @@ Settings > Privacy and Security > Phone Number > Nobody`, {
   }
 }
 
-
 bot.on('text', async (ctx) => {
   if (ctx.chat.type !== 'private') return;
   const state = userStates[ctx.chat.id];
   if (!state) return ctx.reply('Please type /start to begin.');
 
-  if (['welcome', 'invite_message', 'show_join'].includes(state.step)) return;
+  if (['welcome', 'show_join'].includes(state.step)) return;
 
   const input = ctx.message.text.trim();
 
@@ -186,22 +173,9 @@ bot.on('text', async (ctx) => {
           auth: authClient,
         });
 
-        state.step = 'invite_message';
-
-        ctx.reply(`You just stepped into a signal-only zone for serious creators.
-🎯 Gigs. 🎬 Collabs. 🎤 Real Work.
-
-Let’s grow this tribe, one authentic creator at a time.  
-
-*Press ‘NEXT’ button to proceed!*`, {
-          parse_mode: 'Markdown',
-          reply_markup: {
-            keyboard: [['Next']],
-            resize_keyboard: true,
-            one_time_keyboard: true,
-            input_field_placeholder: 'Tap Next to continue'
-          }
-        });
+        // Final message
+        state.step = 'show_join';
+        await showJoinMessage(ctx);
 
       } catch (err) {
         console.error('Spreadsheet error:', err);
@@ -219,7 +193,11 @@ Let’s grow this tribe, one authentic creator at a time.
 bot.on('message', async (ctx) => {
   const msg = ctx.message;
 
-  if (msg.new_chat_members || msg.left_chat_member || (msg.text && msg.text.toLowerCase().includes('you joined this group'))) {
+  if (
+    msg.new_chat_members ||
+    msg.left_chat_member ||
+    (msg.text && msg.text.toLowerCase().includes('you joined this group'))
+  ) {
     try {
       await ctx.deleteMessage(msg.message_id);
     } catch (err) {
