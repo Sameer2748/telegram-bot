@@ -48,7 +48,6 @@ bot.start(async (ctx) => {
 
   userStates[ctx.chat.id] = { step: 'welcome' };
 
-  // First message
   ctx.reply(`🎙️ Welcome to IndieKaum –
 
 Before we unlock full access, we need to know who’s in the room.
@@ -59,9 +58,8 @@ To keep this space authentic, trusted, and spam-free.
 🛡️ Your data stays safe, encrypted, and never shared.
 
 📥 Fill your quick intro here  
-It takes 45 seconds.  Let’s keep IndieKaum real.`);
+It takes 45 seconds. Let’s keep IndieKaum real.`);
 
-  // Delay 5 seconds and send first input
   setTimeout(() => {
     userStates[ctx.chat.id].step = 'name';
     ctx.reply('📝 Your Full Name:', {
@@ -91,49 +89,12 @@ bot.command('restart', async (ctx) => {
   }, 5000);
 });
 
-bot.hears('Next', (ctx) => {
-  if (ctx.chat.type !== 'private') return;
-  const state = userStates[ctx.chat.id] || {};
-
-  if (state.step === 'invite_message') {
-    state.step = 'show_join';
-    showJoinMessage(ctx);
-  }
-
-  userStates[ctx.chat.id] = state;
-});
-
-async function showJoinMessage(ctx) {
-  try {
-    const groupId = process.env.GROUP_ID;
-    const invite = await bot.telegram.createChatInviteLink(groupId, {
-      member_limit: 1,
-      expire_date: Math.floor(Date.now() / 1000) + (10 * 60)
-    });
-
-    await ctx.reply(`✅ Thanks! You're now verified.
-
-📵 Optional: If you wish to hide your contact number from other members, follow:  
-Settings > Privacy and Security > Phone Number > Nobody`, {
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [[
-          { text: '🚀 Join IndieKaum Hub', url: invite.invite_link }
-        ]]
-      }
-    });
-  } catch (error) {
-    console.error('Invite error:', error);
-    ctx.reply('❌ Error generating group invite.');
-  }
-}
-
 bot.on('text', async (ctx) => {
   if (ctx.chat.type !== 'private') return;
   const state = userStates[ctx.chat.id];
   if (!state) return ctx.reply('Please type /start to begin.');
 
-  if (['welcome', 'invite_message', 'show_join'].includes(state.step)) return;
+  if (state.step === 'welcome') return;
 
   const input = ctx.message.text.trim();
 
@@ -185,21 +146,12 @@ bot.on('text', async (ctx) => {
           auth: authClient,
         });
 
-        state.step = 'invite_message';
+        state.step = 'done';
+        ctx.reply(`You are stepping into a signal-only zone for serious creators.
 
-        ctx.reply(`You just stepped into a signal-only zone for serious creators.
-🎯 Gigs. 🎬 Collabs. 🎤 Real Work.
-
-Let’s grow this tribe, one authentic creator at a time.  
-
-*Press ‘NEXT’ button to proceed!*`, {
-          parse_mode: 'Markdown',
-          reply_markup: {
-            keyboard: [['Next']],
-            resize_keyboard: true,
-            one_time_keyboard: true,
-            input_field_placeholder: 'Tap Next to continue'
-          }
+📵 Optional: If you wish to hide your contact number from other members, follow:  
+Settings > Privacy and Security > Phone Number > Nobody`, {
+          parse_mode: 'Markdown'
         });
 
       } catch (err) {
@@ -218,7 +170,11 @@ Let’s grow this tribe, one authentic creator at a time.
 bot.on('message', async (ctx) => {
   const msg = ctx.message;
 
-  if (msg.new_chat_members || msg.left_chat_member || (msg.text && msg.text.toLowerCase().includes('you joined this group'))) {
+  if (
+    msg.new_chat_members ||
+    msg.left_chat_member ||
+    (msg.text && msg.text.toLowerCase().includes('you joined this group'))
+  ) {
     try {
       await ctx.deleteMessage(msg.message_id);
     } catch (err) {
