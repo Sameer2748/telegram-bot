@@ -47,29 +47,27 @@ bot.start(async (ctx) => {
   }
 
   userStates[ctx.chat.id] = { step: 'welcome' };
-  ctx.reply(`🎙️ *Welcome to IndieKaum* – where creators don’t just scroll, they build.
 
-Before we unlock full access, we need to know *who’s in the room*.
+  // First message
+  ctx.reply(`🎙️ Welcome to IndieKaum –
 
-📌 *Why?*  
-To keep this space authentic, trusted, and spam-free. Every profile helps us ensure you’re a real creative — not a bot, a brand, or a ghost.
+Before we unlock full access, we need to know who’s in the room.
 
-🛡️ *Your data stays safe*, encrypted, and never shared. No algorithms. No ads.
+📌 Why?  
+To keep this space authentic, trusted, and spam-free.
 
-📥 *Fill your quick intro here*  
-It takes 45 seconds. That’s faster than rendering a video 😉
+🛡️ Your data stays safe, encrypted, and never shared.
 
-Let’s keep IndieKaum real.
+📥 Fill your quick intro here  
+It takes 45 seconds.  Let’s keep IndieKaum real.`);
 
-*Tap 'Next' to begin*`, {
-    parse_mode: 'Markdown',
-    reply_markup: {
-      keyboard: [['Next']],
-      resize_keyboard: true,
-      one_time_keyboard: true,
-      input_field_placeholder: 'Tap Next to continue'
-    }
-  });
+  // Delay 5 seconds and send first input
+  setTimeout(() => {
+    userStates[ctx.chat.id].step = 'name';
+    ctx.reply('📝 Your Full Name:', {
+      reply_markup: { remove_keyboard: true }
+    });
+  }, 5000);
 });
 
 bot.command('restart', async (ctx) => {
@@ -82,26 +80,22 @@ bot.command('restart', async (ctx) => {
   }
 
   userStates[ctx.chat.id] = { step: 'welcome' };
-  ctx.reply(`🎙️ Restarted! Let's go again. Tap 'Next' to begin:`, {
-    reply_markup: {
-      keyboard: [['Next']],
-      resize_keyboard: true,
-      one_time_keyboard: true,
-      input_field_placeholder: 'Tap Next to continue'
-    }
-  });
+
+  ctx.reply(`🎙️ Restarting... Please wait...`);
+
+  setTimeout(() => {
+    userStates[ctx.chat.id].step = 'name';
+    ctx.reply('📝 Your Full Name:', {
+      reply_markup: { remove_keyboard: true }
+    });
+  }, 5000);
 });
 
 bot.hears('Next', (ctx) => {
   if (ctx.chat.type !== 'private') return;
   const state = userStates[ctx.chat.id] || {};
 
-  if (state.step === 'welcome') {
-    state.step = 'name';
-    ctx.reply('📝 Your Full Name:', {
-      reply_markup: { remove_keyboard: true }
-    });
-  } else if (state.step === 'invite_message') {
+  if (state.step === 'invite_message') {
     state.step = 'show_join';
     showJoinMessage(ctx);
   }
@@ -119,12 +113,8 @@ async function showJoinMessage(ctx) {
 
     await ctx.reply(`✅ Thanks! You're now verified.
 
-Please follow the rules of the community:  
-🚫 No spam or self-promotion  
-✅ Be kind, respectful, and helpful
-
-📵 *Optional:* If you wish to hide your contact number from other members, follow:  
-*Settings > Privacy and Security > Phone Number > Nobody*`, {
+📵 Optional: If you wish to hide your contact number from other members, follow:  
+Settings > Privacy and Security > Phone Number > Nobody`, {
       parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [[
@@ -143,10 +133,7 @@ bot.on('text', async (ctx) => {
   const state = userStates[ctx.chat.id];
   if (!state) return ctx.reply('Please type /start to begin.');
 
-  // Block input typing in button-only steps
-  if (state.step === 'welcome' || state.step === 'invite_message' || state.step === 'show_join') {
-    return;
-  }
+  if (['welcome', 'invite_message', 'show_join'].includes(state.step)) return;
 
   const input = ctx.message.text.trim();
 
@@ -230,7 +217,8 @@ Let’s grow this tribe, one authentic creator at a time.
 
 bot.on('message', async (ctx) => {
   const msg = ctx.message;
-  if (msg.new_chat_members || msg.left_chat_member) {
+
+  if (msg.new_chat_members || msg.left_chat_member || (msg.text && msg.text.toLowerCase().includes('you joined this group'))) {
     try {
       await ctx.deleteMessage(msg.message_id);
     } catch (err) {
@@ -238,28 +226,6 @@ bot.on('message', async (ctx) => {
     }
   }
 });
-bot.on('message', async (ctx) => {
-  const msg = ctx.message;
-
-  // Log for debugging
-  console.log('Received message:', {
-    message_id: msg.message_id,
-    message_thread_id: msg.message_thread_id,
-    new_chat_members: msg.new_chat_members,
-    left_chat_member: msg.left_chat_member,
-    text: msg.text,
-  });
-
-  if (msg.new_chat_members || msg.left_chat_member) {
-    console.log(`Deleting join/leave message:`, msg.message_id);
-    try {
-      await ctx.deleteMessage(msg.message_id);
-    } catch (err) {
-      console.error('❌ Could not delete join/leave message:', err);
-    }
-  }
-});
-
 
 bot.launch();
 console.log('🤖 Bot is running...');
